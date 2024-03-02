@@ -19,15 +19,18 @@
 // reset.
 #define GP_SRCLR 9
 
+#define COMMON_ANODE 0
+#define COMMON_CATHODE 1
+
 // Shift Register => Digit Display
-// Qa => PIN 7 (a)
-// Qb => PIN 6 (b)
-// Qc => PIN 4 (c)
-// Qd => PIN 2 (d)
-// Qe => PIN 1 (e)
-// Qf => PIN 9 (f)
-// Qg => PIN 10 (g)
-// Qh => PIN 5 (DP)
+// Qa => PIN (a)
+// Qb => PIN (b)
+// Qc => PIN (c)
+// Qd => PIN (d)
+// Qe => PIN (e)
+// Qf => PIN (f)
+// Qg => PIN (g)
+// Qh => PIN (DP)
 // 
 // Digit Display Schema
 //   ---a---
@@ -41,16 +44,16 @@
 //   ---d--- DP
 //
 const uint num[10] = {
-    252, // 0
-    96,  // 1
-    218, // 2
-    242, // 3
-    102, // 4
-    182, // 5
-    190, // 6
-    224, // 7
-    254, // 8
-    230  // 9
+  252,                          // 0
+  96,                           // 1
+  218,                          // 2
+  242,                          // 3
+  102,                          // 4
+  182,                          // 5
+  190,                          // 6
+  224,                          // 7
+  254,                          // 8
+  230                           // 9
 };
 
 void
@@ -75,12 +78,27 @@ sreg_init ()
 }
 
 void
-sreg_update (uint val)
+sreg_update (uint val, uint common_pin, uint decimal_point)
 {
+  uint number, digit;
+  number = num[val];
+
+  if (decimal_point)
+    {
+      number++;
+    }
+
+
   gpio_put (GP_LATCH, 0);
   for (int i = 0; i < 8; i++)
     {
-      gpio_put (GP_DATA, !!(val & (1 << i)));
+      digit = !!(number & (1 << i));
+
+      if (common_pin == COMMON_ANODE)
+        {
+          digit = !digit;
+        }
+      gpio_put (GP_DATA, digit);
       gpio_put (GP_CLOCK, 1);
       sleep_us (1);
       gpio_put (GP_CLOCK, 0);
@@ -103,23 +121,16 @@ main ()
 
   sreg_init ();
 
-  uint64_t ts = time_us_64 ();
-
-  uint index = 0;
-  uint number;
-
   while (1)
     {
       for (int index = 0; index < 10; index++)
         {
-          number = num[index];
-          printf("Display number %d...\n", index);
-          sreg_update(number);
+          printf ("Display number %d...\n", index);
+          sreg_update (index, COMMON_ANODE, 0);
           sleep_ms (1000);
 
-          number = add_decimal(number);
-          printf("Display number %d with decimal point...\n", index);
-          sreg_update(number);
+          printf ("Display number %d with decimal point...\n", index);
+          sreg_update (index, COMMON_ANODE, 1);
           sleep_ms (1000);
         }
     }

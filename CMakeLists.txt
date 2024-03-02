@@ -22,7 +22,7 @@ pico_sdk_init()
 add_executable(shift_reg shift_reg.c )
 
 pico_set_program_name(shift_reg "shift_reg")
-pico_set_program_version(shift_reg "0.1")
+pico_set_program_version(shift_reg "0.2")
 
 pico_enable_stdio_uart(shift_reg 1)
 pico_enable_stdio_usb(shift_reg 0)
